@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林口蘇澳API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, select {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 5px 10px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .url-display {
+            margin-top: 20px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>林口蘇澳API</h1>
+    <label for="station">選擇站點：</label>
+    <select id="station" onchange="updateColumns()">
+        <option value="loginfo_20201104120203">台電林口-微氣象站(1號機頂樓)</option>
+        <option value="loginfo_20201104110103">台電林口-煙囪旁淹水感測</option>
+        <option value="loginfo_20220726120202">蘇澳-微氣象站</option>
+        <option value="loginfo_20221005160001">蘇澳-淹水感測</option>
+    </select>
+    <br><br>
+    <label for="startDate">起始日期：</label>
+    <input type="date" id="startDate">
+    <br><br>
+    <label for="endDate">結束日期：</label>
+    <input type="date" id="endDate">
+    <br><br>
+    <button onclick="searchData()">搜尋</button>
+
+    <div class="url-display" id="urlDisplay"></div>
+
+    <table id="resultsTable">
+        <thead>
+            <tr id="tableHeaders">
+                <!-- 預設欄位會在這裡動態生成 -->
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        const columnDefinitions = {
+            "loginfo_20201104120203": ["DateStamp", "TimeStamp", "counter1", "rate1", "ai1", "rate2", "MB_TYPE1DEVICE2Data", "Battery"],  // 台電林口-微氣象站
+            "loginfo_20201104110103": ["DateStamp", "TimeStamp", "MB_TYPE1DEVICE1Data", "Battery"],  // 台電林口-煙囪旁淹水感測
+            "loginfo_20220726120202": ["DateStamp", "TimeStamp", "counter1", "rate1", "ai1", "rate2", "MB_TYPE1DEVICE2Data", "Battery"],  // 蘇澳-微氣象站
+            "loginfo_20221005160001": ["DateStamp", "TimeStamp", "MB_TYPE1DEVICE1Data", "Battery"]  // 蘇澳-淹水感測
+        };
+
+        function updateColumns() {
+            const station = document.getElementById('station').value;
+            const headers = columnDefinitions[station];
+            const tableHeaders = document.getElementById('tableHeaders');
+            
+            // 清空舊的欄位
+            tableHeaders.innerHTML = '';
+
+            // 根據選擇的資料表更新欄位
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                tableHeaders.appendChild(th);
+            });
+        }
+
+        async function searchData() {
+            const station = document.getElementById('station').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const tableBody = document.querySelector('#resultsTable tbody');
+            const urlDisplay = document.getElementById('urlDisplay');
+            tableBody.innerHTML = ''; // 清空表格
+            urlDisplay.innerHTML = ''; // 清空 URL 顯示
+
+            if (!startDate || !endDate) {
+                alert('請輸入有效的日期範圍');
+                return;
+            }
+
+            // 生成 API 請求 URL
+            let apiUrl = `http://61.218.28.52:5000/api/data?table=${station}&startDate=${startDate}&endDate=${endDate}`;
+
+            // 顯示生成的 API 請求 URL
+            urlDisplay.innerHTML = `API URL：<a href="${apiUrl}" target="_blank">${apiUrl}</a>`;
+
+            try {
+                // 發送請求到後端 API，並將資料表名稱和日期範圍作為參數傳送
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (response.ok) {
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        const headers = columnDefinitions[station];
+                        headers.forEach(header => {
+                            const td = document.createElement('td');
+                            // 顯示資料：若是 null 或 undefined，則顯示 0
+                            td.textContent = (row[header] !== undefined && row[header] !== null) ? row[header] : '0';
+                            tr.appendChild(td);
+                        });
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    alert('查詢失敗：' + (data.error || '未知錯誤'));
+                }
+            } catch (error) {
+                alert('發生錯誤：' + error.message);
+            }
+        }
+
+        // 頁面載入時，初始化顯示欄位
+        updateColumns();
+    </script>
+</body>
+</html>
