@@ -66,10 +66,10 @@
 
     <script>
         const columnDefinitions = {
-            "loginfo_20201104120203": ["DateStamp", "TimeStamp", "counter1", "rate1", "ai1", "rate2", "MB_TYPE1DEVICE2Data", "Battery"],  // 台電林口-微氣象站
-            "loginfo_20201104110103": ["DateStamp", "TimeStamp", "MB_TYPE1DEVICE1Data", "Battery"],  // 台電林口-煙囪旁淹水感測
-            "loginfo_20220726120202": ["DateStamp", "TimeStamp", "counter1", "rate1", "ai1", "rate2", "MB_TYPE1DEVICE2Data", "Battery"],  // 蘇澳-微氣象站
-            "loginfo_20221005160001": ["DateStamp", "TimeStamp", "MB_TYPE1DEVICE1Data", "Battery"]  // 蘇澳-淹水感測
+            "loginfo_20201104120203": ["DateStamp", "TimeStamp", "counter1", "rate1", "ai1", "rate2", "MB_TYPE1DEVICE2Data", "Battery"],
+            "loginfo_20201104110103": ["DateStamp", "TimeStamp", "MB_TYPE1DEVICE1Data", "Battery"],
+            "loginfo_20220726120202": ["DateStamp", "TimeStamp", "counter1", "rate1", "ai1", "rate2", "MB_TYPE1DEVICE2Data", "Battery"],
+            "loginfo_20221005160001": ["DateStamp", "TimeStamp", "MB_TYPE1DEVICE1Data", "Battery"]
         };
 
         function updateColumns() {
@@ -77,10 +77,8 @@
             const headers = columnDefinitions[station];
             const tableHeaders = document.getElementById('tableHeaders');
             
-            // 清空舊的欄位
             tableHeaders.innerHTML = '';
 
-            // 根據選擇的資料表更新欄位
             headers.forEach(header => {
                 const th = document.createElement('th');
                 th.textContent = header;
@@ -102,14 +100,11 @@
                 return;
             }
 
-            // 生成 API 請求 URL
             let apiUrl = `http://61.218.28.52:5000/api/data?table=${station}&startDate=${startDate}&endDate=${endDate}`;
 
-            // 顯示生成的 API 請求 URL
             urlDisplay.innerHTML = `API URL：<a href="${apiUrl}" target="_blank">${apiUrl}</a>`;
 
             try {
-                // 發送請求到後端 API，並將資料表名稱和日期範圍作為參數傳送
                 const response = await fetch(apiUrl);
                 const data = await response.json();
 
@@ -119,7 +114,6 @@
                         const headers = columnDefinitions[station];
                         headers.forEach(header => {
                             const td = document.createElement('td');
-                            // 顯示資料：若是 null 或 undefined，則顯示 0
                             td.textContent = (row[header] !== undefined && row[header] !== null) ? row[header] : '0';
                             tr.appendChild(td);
                         });
@@ -133,7 +127,6 @@
             }
         }
 
-        // 頁面載入時，初始化顯示欄位
         updateColumns();
     </script>
 </body>
